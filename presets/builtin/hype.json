@@ -1,0 +1,9 @@
+{
+  "name": "Hype",
+  "category": "Reel Personas",
+  "params": {
+    "dsp": {"pitch_semitones": 1.0, "formant_shift": 0.5, "clarity": 90.0, "warmth": 30.0, "reverb_room": 0.2, "reverb_damping": 0.8, "reverb_wet": 0.1, "echo_delay_ms": 100.0, "echo_feedback": 0.2, "echo_wet": 0.1, "deesser_freq": 7500.0, "deesser_threshold_db": -20.0, "gate_threshold_db": -45.0, "gate_attack_ms": 5.0, "gate_release_ms": 50.0, "vibrato_rate_hz": 5.0, "vibrato_depth": 0.0},
+    "enhance": {"enabled": true, "noise_suppression": 50.0, "voice_restoration": 60.0},
+    "rvc": {"enabled": false, "model_path": "", "index_path": "", "pitch_offset": 0.0, "index_rate": 0.75, "filter_radius": 3, "rms_mix_rate": 0.25, "protect_rate": 0.33, "f0_method": "rmvpe"}
+  }
+}

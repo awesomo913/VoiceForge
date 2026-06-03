@@ -1,0 +1,9 @@
+{
+  "name": "Calm Narrator",
+  "category": "Reel Personas",
+  "params": {
+    "dsp": {"pitch_semitones": -2.0, "formant_shift": -1.0, "clarity": 55.0, "warmth": 75.0, "reverb_room": 0.4, "reverb_damping": 0.7, "reverb_wet": 0.2, "echo_delay_ms": 200.0, "echo_feedback": 0.0, "echo_wet": 0.0, "deesser_freq": 7000.0, "deesser_threshold_db": -16.0, "gate_threshold_db": -55.0, "gate_attack_ms": 15.0, "gate_release_ms": 150.0, "vibrato_rate_hz": 5.0, "vibrato_depth": 0.0},
+    "enhance": {"enabled": true, "noise_suppression": 55.0, "voice_restoration": 75.0},
+    "rvc": {"enabled": false, "model_path": "", "index_path": "", "pitch_offset": 0.0, "index_rate": 0.75, "filter_radius": 3, "rms_mix_rate": 0.25, "protect_rate": 0.33, "f0_method": "rmvpe"}
+  }
+}

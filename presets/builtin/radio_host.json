@@ -1,0 +1,9 @@
+{
+  "name": "Radio Host",
+  "category": "Characters",
+  "params": {
+    "dsp": {"pitch_semitones": -1.5, "formant_shift": -0.5, "clarity": 95.0, "warmth": 65.0, "reverb_room": 0.15, "reverb_damping": 0.8, "reverb_wet": 0.08, "echo_delay_ms": 200.0, "echo_feedback": 0.0, "echo_wet": 0.0, "deesser_freq": 7200.0, "deesser_threshold_db": -20.0, "gate_threshold_db": -48.0, "gate_attack_ms": 5.0, "gate_release_ms": 60.0, "vibrato_rate_hz": 5.0, "vibrato_depth": 0.0},
+    "enhance": {"enabled": true, "noise_suppression": 70.0, "voice_restoration": 80.0},
+    "rvc": {"enabled": false, "model_path": "", "index_path": "", "pitch_offset": 0.0, "index_rate": 0.75, "filter_radius": 3, "rms_mix_rate": 0.25, "protect_rate": 0.33, "f0_method": "rmvpe"}
+  }
+}
