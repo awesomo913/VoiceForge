@@ -83,8 +83,10 @@ def _resample(audio: np.ndarray, from_sr: int, to_sr: int) -> np.ndarray:
     """
     import soundfile as sf
 
-    tmp_in = tempfile.mktemp(suffix=".wav")
-    tmp_out = tempfile.mktemp(suffix=".wav")
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+        tmp_in = f.name
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+        tmp_out = f.name
     try:
         sf.write(tmp_in, audio, from_sr, subtype="FLOAT")
         try:

@@ -73,8 +73,8 @@ class PreviewEngine:
         """Stop any currently playing audio."""
         try:
             sd.stop()
-        except Exception:
-            pass
+        except Exception as e:
+            logging.warning(f"stop_playback error (ignored): {e}")
 
     def process_and_play(
         self, audio: np.ndarray, sr: int, params: VoiceParams

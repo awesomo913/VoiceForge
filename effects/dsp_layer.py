@@ -131,7 +131,7 @@ def apply_dsp(audio: np.ndarray, sr: int, params: VoiceParams) -> np.ndarray:
 
     # De-esser: narrow cut around sibilant frequencies (~7 kHz) to tame harsh S/T sounds
     # Static EQ cut at sibilance frequency; deesser_threshold_db is the gain_db (negative = cut)
-    if dsp.deesser_threshold_db > -60.0:
+    if dsp.deesser_threshold_db > -80.0:
         plugins.append(
             PeakFilter(
                 cutoff_frequency_hz=dsp.deesser_freq,

@@ -44,8 +44,10 @@ def apply_rvc(audio: np.ndarray, sr: int, params: VoiceParams) -> np.ndarray:
         log.warning("rvc_python not installed (Windows limitation) — RVC layer skipped")
         return audio
 
-    tmp_in = tempfile.mktemp(suffix=".wav")
-    tmp_out = tempfile.mktemp(suffix=".wav")
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+        tmp_in = f.name
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+        tmp_out = f.name
 
     try:
         sf.write(tmp_in, audio.astype(np.float32), sr, subtype="FLOAT")
@@ -84,8 +86,10 @@ def apply_rvc(audio: np.ndarray, sr: int, params: VoiceParams) -> np.ndarray:
 
 def _resample_ffmpeg(audio: np.ndarray, from_sr: int, to_sr: int) -> np.ndarray:
     """Resample audio from from_sr to to_sr using ffmpeg."""
-    tmp_in = tempfile.mktemp(suffix=".wav")
-    tmp_out = tempfile.mktemp(suffix=".wav")
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+        tmp_in = f.name
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+        tmp_out = f.name
     try:
         sf.write(tmp_in, audio, from_sr, subtype="FLOAT")
         subprocess.run(

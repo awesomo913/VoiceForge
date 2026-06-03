@@ -59,7 +59,7 @@ class EffectsPanel(ctk.CTkFrame):
         s("Echo feedback", "echo_feedback", 0, 1, 8)
         s("Echo wet", "echo_wet", 0, 1, 9)
         s("De-esser freq (Hz)", "deesser_freq", 3000, 12000, 10, 0)
-        s("De-esser threshold", "deesser_threshold_db", -60, -6, 11)
+        s("De-esser threshold (off=-80)", "deesser_threshold_db", -80, -6, 11)
         s("Gate threshold", "gate_threshold_db", -80, -20, 12)
         s("Gate attack (ms)", "gate_attack_ms", 1, 100, 13)
         s("Gate release (ms)", "gate_release_ms", 10, 500, 14)
@@ -205,25 +205,13 @@ class EffectsPanel(ctk.CTkFrame):
 
     def load_params(self, params: VoiceParams):
         self.params = params
-        dsp = params.dsp
-        enh = params.enhance
-        rvc = params.rvc
-        mapping = [
-            *[(f"dsp.{a}", getattr(dsp, a)) for a in [
-                "pitch_semitones", "formant_shift", "clarity", "warmth",
-                "reverb_room", "reverb_damping", "reverb_wet",
-                "echo_delay_ms", "echo_feedback", "echo_wet",
-                "deesser_freq", "deesser_threshold_db",
-                "gate_threshold_db", "gate_attack_ms", "gate_release_ms",
-                "vibrato_rate_hz", "vibrato_depth"
-            ]],
-            *[(f"enhance.{a}", getattr(enh, a)) for a in [
-                "noise_suppression", "voice_restoration"
-            ]],
-            *[(f"rvc.{a}", getattr(rvc, a)) for a in [
-                "pitch_offset", "index_rate", "rms_mix_rate", "protect_rate"
-            ]],
-        ]
-        for key, val in mapping:
-            if key in self._sliders:
-                self._sliders[key].set(val)
+        # Rebuild tabs with new params so lambdas capture fresh references
+        for widget in self.tab_view.winfo_children():
+            widget.destroy()
+        self._sliders = {}
+        self.tab_view.add("DSP Effects")
+        self.tab_view.add("AI Enhancement")
+        self.tab_view.add("AI Voice (RVC)")
+        self._build_dsp_tab(self.tab_view.tab("DSP Effects"))
+        self._build_enhance_tab(self.tab_view.tab("AI Enhancement"))
+        self._build_rvc_tab(self.tab_view.tab("AI Voice (RVC)"))

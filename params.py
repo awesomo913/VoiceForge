@@ -16,7 +16,7 @@ class DSPParams:
     echo_feedback: float = 0.0
     echo_wet: float = 0.0
     deesser_freq: float = 7000.0
-    deesser_threshold_db: float = -60.0
+    deesser_threshold_db: float = -80.0
     gate_threshold_db: float = -60.0
     gate_attack_ms: float = 10.0
     gate_release_ms: float = 100.0

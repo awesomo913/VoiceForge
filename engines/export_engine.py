@@ -41,7 +41,7 @@ def _build_ffmpeg_filter(params: VoiceParams) -> str:
         )
 
     # De-esser: narrow EQ cut around the sibilance frequency (~7 kHz)
-    if dsp.deesser_threshold_db > -60.0:
+    if dsp.deesser_threshold_db > -80.0:
         gain_db = max(-24.0, dsp.deesser_threshold_db)
         filters.append(
             f"equalizer=f={dsp.deesser_freq:.0f}:width_type=o:width=2:g={gain_db:.1f}"
@@ -132,8 +132,10 @@ class ExportEngine:
             RuntimeError: If FFmpeg is not on PATH or exits non-zero.
             OSError:      If *output_path* cannot be written.
         """
-        tmp_raw = tempfile.mktemp(suffix=".wav")
-        tmp_ffmpeg_out = tempfile.mktemp(suffix=".wav")
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            tmp_raw = f.name
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            tmp_ffmpeg_out = f.name
 
         try:
             # Step 1: pyrubberband pitch + formant + vibrato

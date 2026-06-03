@@ -1,6 +1,7 @@
 import json
 import os
 import logging
+import pathlib
 import customtkinter as ctk
 from params import VoiceParams
 from recorder import Recorder, get_input_devices
@@ -13,7 +14,7 @@ from ui.waveform import WaveformWidget
 from ui.effects_panel import EffectsPanel
 from ui.preset_panel import PresetPanel
 
-SESSION_FILE = "last_session.json"
+SESSION_FILE = str(pathlib.Path.home() / ".voiceforge" / "last_session.json")
 
 
 class VoiceForgeApp:
@@ -86,12 +87,19 @@ class VoiceForgeApp:
         if self._raw_audio is None:
             self.toolbar.show_message("Record something first")
             return
+        import threading
         logging.info("STATE ready→previewing")
-        processed = self.preview_engine.process_and_play(
-            self._raw_audio, self._sample_rate, self.params
-        )
-        self._processed_audio = processed
-        logging.info("STATE previewing→ready")
+        self.toolbar.show_message("Processing...")
+
+        def _run():
+            processed = self.preview_engine.process_and_play(
+                self._raw_audio, self._sample_rate, self.params
+            )
+            self._processed_audio = processed
+            self.toolbar.show_message("Playing")
+            logging.info("STATE previewing→ready")
+
+        threading.Thread(target=_run, daemon=True).start()
 
     def _on_export(self):
         if self._raw_audio is None:
@@ -126,12 +134,13 @@ class VoiceForgeApp:
         self.preset_panel.refresh()
 
     def _load_session(self):
+        pathlib.Path(SESSION_FILE).parent.mkdir(parents=True, exist_ok=True)
         if os.path.exists(SESSION_FILE):
             try:
                 with open(SESSION_FILE, "r") as f:
                     self.params = VoiceParams.from_dict(json.load(f))
-            except Exception as exc:
-                logging.warning(f"Could not restore session: {exc}")
+            except Exception as e:
+                logging.warning(f"Could not restore session: {e}")
 
     def _on_close(self):
         try:
