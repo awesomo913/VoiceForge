@@ -17,6 +17,8 @@ def test_passthrough_when_all_zero():
     result = apply_dsp(audio, SR, params)
     assert result.shape == audio.shape
     assert result.dtype == np.float32
+    # When all DSP params are at zero/default, the audio should pass through unchanged.
+    np.testing.assert_allclose(result, audio, rtol=1e-5, atol=1e-5)
 
 
 def test_pitch_shift_changes_audio():
