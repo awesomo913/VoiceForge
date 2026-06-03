@@ -36,8 +36,8 @@ def _build_ffmpeg_filter(params: VoiceParams) -> str:
     # Noise gate: silence regions below the threshold
     if dsp.gate_threshold_db > -60.0:
         filters.append(
-            f"silenceremove=start_periods=1:start_threshold={dsp.gate_threshold_db}dB"
-            f":stop_periods=-1:stop_threshold={dsp.gate_threshold_db}dB"
+            f"silenceremove=start_periods=1:start_threshold={dsp.gate_threshold_db}dB:start_duration=0.1"
+            f":stop_periods=-1:stop_threshold={dsp.gate_threshold_db}dB:stop_duration=0.1"
         )
 
     # De-esser: narrow EQ cut around the sibilance frequency (~7 kHz)
@@ -99,7 +99,10 @@ def _run_ffmpeg_chain(input_path: str, output_path: str, params: VoiceParams) ->
         "-acodec", "pcm_s24le",
         output_path,
     ]
-    result = subprocess.run(cmd, capture_output=True)
+    try:
+        result = subprocess.run(cmd, capture_output=True)
+    except OSError as e:
+        raise RuntimeError(f"FFmpeg not found or not executable: {e}") from e
     if result.returncode != 0:
         raise RuntimeError(
             f"FFmpeg failed (exit {result.returncode}): "
