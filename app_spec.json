@@ -1,0 +1,17 @@
+{
+  "name": "VoiceForge",
+  "entry": "main.py",
+  "kind": "gui",
+  "build_mode": "onefile",
+  "hidden_imports": [
+    "customtkinter",
+    "sounddevice",
+    "soundfile",
+    "pedalboard",
+    "pyrubberband",
+    "df",
+    "rvc_python"
+  ],
+  "data_dirs": ["presets/builtin"],
+  "icon": "assets/icon.ico"
+}

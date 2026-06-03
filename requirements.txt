@@ -1,0 +1,10 @@
+sounddevice==0.5.1
+soundfile==0.13.1
+numpy==1.26.4
+pedalboard==0.9.16
+pyrubberband==0.3.0
+deepfilternet==0.5.6
+rvc-python==0.2.0
+customtkinter==5.2.2
+ffmpeg-python==0.2.0
+pytest==8.3.5

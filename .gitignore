@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+dist/
+build/
+*.spec
+models/
+presets/user/
+last_session.json
+*.log
