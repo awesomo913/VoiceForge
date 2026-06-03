@@ -8,10 +8,10 @@ from engines.preview_engine import PreviewEngine
 from engines.export_engine import ExportEngine
 from presets.manager import PresetManager
 
-# from ui.toolbar import Toolbar        # Task 13
-# from ui.waveform import WaveformWidget  # Task 14
-# from ui.effects_panel import EffectsPanel  # Task 15
-# from ui.preset_panel import PresetPanel    # Task 16
+from ui.toolbar import Toolbar
+from ui.waveform import WaveformWidget
+from ui.effects_panel import EffectsPanel
+from ui.preset_panel import PresetPanel
 
 SESSION_FILE = "last_session.json"
 
@@ -37,35 +37,54 @@ class VoiceForgeApp:
         self._build_ui()
 
     def _build_ui(self):
-        # UI panels wired in Tasks 13-16
-        # Stubs so the app shell is importable now
-        self.toolbar = None
-        self.waveform = None
-        self.effects_panel = None
-        self.preset_panel = None
-        logging.info("DECISION UI panels not yet wired (Tasks 13-16 pending)")
+        self.toolbar = Toolbar(
+            self.root,
+            on_record=self._on_record,
+            on_stop=self._on_stop,
+            on_preview=self._on_preview,
+            on_export=self._on_export,
+        )
+        self.toolbar.pack(fill="x", side="top")
+
+        self.waveform = WaveformWidget(self.root, height=80)
+        self.waveform.pack(fill="x", side="top", padx=8, pady=(4, 0))
+
+        center = ctk.CTkFrame(self.root)
+        center.pack(fill="both", expand=True, padx=8, pady=8)
+
+        self.effects_panel = EffectsPanel(
+            center,
+            params=self.params,
+            on_change=self._on_params_change,
+        )
+        self.effects_panel.pack(side="left", fill="both", expand=True)
+
+        self.preset_panel = PresetPanel(
+            center,
+            preset_manager=self.preset_manager,
+            on_load=self._on_preset_load,
+            on_save=self._on_preset_save,
+        )
+        self.preset_panel.pack(side="right", fill="y")
+        logging.info("STATE init UI panels wired")
 
     def _on_record(self):
         self.recorder.start()
-        if self.toolbar is not None:
-            self.toolbar.set_recording(True)
+        self.toolbar.set_recording(True)
         logging.info("STATE ready→recording")
 
     def _on_stop(self):
         audio = self.recorder.stop()
-        if self.toolbar is not None:
-            self.toolbar.set_recording(False)
+        self.toolbar.set_recording(False)
         if audio is not None:
             self._raw_audio = audio
             self._sample_rate = self.recorder.sample_rate
-            if self.waveform is not None:
-                self.waveform.draw(audio)
+            self.waveform.draw(audio)
             logging.info(f"STATE recording→ready samples={len(audio)}")
 
     def _on_preview(self):
         if self._raw_audio is None:
-            if self.toolbar is not None:
-                self.toolbar.show_message("Record something first")
+            self.toolbar.show_message("Record something first")
             return
         logging.info("STATE ready→previewing")
         processed = self.preview_engine.process_and_play(
@@ -76,8 +95,7 @@ class VoiceForgeApp:
 
     def _on_export(self):
         if self._raw_audio is None:
-            if self.toolbar is not None:
-                self.toolbar.show_message("Record something first")
+            self.toolbar.show_message("Record something first")
             return
         from tkinter import filedialog
         path = filedialog.asksaveasfilename(
@@ -90,26 +108,22 @@ class VoiceForgeApp:
         logging.info(f"DECISION export path={path}")
         try:
             self.export_engine.export(self._raw_audio, self._sample_rate, self.params, path)
-            if self.toolbar is not None:
-                self.toolbar.show_message(f"Exported: {os.path.basename(path)}")
+            self.toolbar.show_message(f"Exported: {os.path.basename(path)}")
             logging.info(f"STATE ready export_done={path}")
         except Exception as exc:
             logging.error(f"Export failed: {exc}")
-            if self.toolbar is not None:
-                self.toolbar.show_message(f"Export failed: {exc}")
+            self.toolbar.show_message(f"Export failed: {exc}")
 
     def _on_params_change(self):
         pass  # params object mutated in-place by EffectsPanel
 
     def _on_preset_load(self, params: VoiceParams):
         self.params = params
-        if self.effects_panel is not None:
-            self.effects_panel.load_params(params)
+        self.effects_panel.load_params(params)
 
     def _on_preset_save(self, name: str, category: str):
         self.preset_manager.save(name, category, self.params)
-        if self.preset_panel is not None:
-            self.preset_panel.refresh()
+        self.preset_panel.refresh()
 
     def _load_session(self):
         if os.path.exists(SESSION_FILE):
