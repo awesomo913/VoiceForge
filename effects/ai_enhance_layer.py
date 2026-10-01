@@ -2,6 +2,7 @@
 import logging
 import os
 import subprocess
+import sys
 import tempfile
 
 import numpy as np
@@ -20,13 +21,48 @@ except ImportError:
     enhance = None  # type: ignore[assignment]
 
 
+def _bundled_model_dir() -> str:
+    """Path to the bundled DeepFilterNet3 model weights (assets/deepfilternet3/).
+
+    Works both running from source (relative to this file's repo root) and
+    frozen inside a PyInstaller onefile exe (relative to the temp extraction
+    dir, sys._MEIPASS). Bundling these ~8.4 MB weights means init_df() never
+    needs to reach the network on first run — see THIRD_PARTY.md for the
+    exact source URL, version, and checksum of what's bundled.
+    """
+    base = getattr(sys, "_MEIPASS", None)
+    if base is None:
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, "assets", "deepfilternet3")
+
+
 def _get_df_model() -> tuple[object, object]:
-    """Load (and cache) the DeepFilterNet model + state. Raises RuntimeError on failure."""
+    """Load (and cache) the DeepFilterNet model + state. Raises RuntimeError on failure.
+
+    Prefers the bundled model directory (assets/deepfilternet3/) when present;
+    falls back to init_df()'s own default (its usual cache dir, downloading
+    the model there on first use if needed) otherwise — e.g. for a from-source
+    checkout where the bundled assets weren't fetched.
+    """
     global _df_model, _df_state
     if _df_model is None:
         try:
             from df.enhance import init_df
-            _df_model, _df_state, _ = init_df()
+            bundled_dir = _bundled_model_dir()
+            model_base_dir = bundled_dir if os.path.isdir(bundled_dir) else None
+            if model_base_dir is None:
+                log.info(
+                    "Bundled DeepFilterNet model not found at %s; "
+                    "falling back to init_df()'s own default/download location.",
+                    bundled_dir,
+                )
+            # log_file=None: VoiceForge already has its own diagnostics_logger
+            # writing to %LOCALAPPDATA%; without this, init_df() writes its own
+            # enhance.log directly into model_base_dir — which, for the
+            # bundled case, is a tracked source directory (assets/deepfilternet3/),
+            # so every from-source run would dirty the working tree with a log
+            # file containing the developer's local file paths.
+            _df_model, _df_state, _ = init_df(model_base_dir=model_base_dir, log_file=None)
         except Exception as exc:
             raise RuntimeError(f"DeepFilterNet failed to load: {exc}") from exc
     return _df_model, _df_state
@@ -42,7 +78,15 @@ def apply_enhancement(audio: np.ndarray, sr: int, params: VoiceParams) -> np.nda
 
     try:
         import torch
+    except ImportError as exc:
+        log.error(
+            "AI enhancement unavailable (torch not installed), passing through: %s",
+            exc,
+            extra={"ui_status": "AI noise cleanup unavailable — torch not installed"},
+        )
+        return audio
 
+    try:
         # Use the module-level `enhance` so tests can patch it easily.
         _enhance_fn = globals().get("enhance")
         if _enhance_fn is None:

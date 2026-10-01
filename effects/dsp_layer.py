@@ -1,4 +1,6 @@
 import logging
+import os
+import sys
 
 import numpy as np
 import pyrubberband as pyrb
@@ -16,6 +18,33 @@ from pedalboard import (
 from params import VoiceParams
 
 log = logging.getLogger(__name__)
+
+
+def _ensure_vendored_rubberband_on_path() -> None:
+    """If a vendored rubberband binary ships with this build, put its folder
+    on PATH so pyrubberband's `subprocess.check_call(["rubberband", ...])`
+    (a bare command name, resolved via PATH) can find it without requiring
+    the user to install anything separately.
+
+    No-op when nothing is vendored — that's the normal/default state (see
+    THIRD_PARTY.md for why this project doesn't download that binary itself);
+    formant shift then falls back to pedalboard's built-in pitch shifter, as
+    documented in the README.
+    """
+    base = getattr(sys, "_MEIPASS", None)
+    if base is None:
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    vendor_dir = os.path.join(base, "vendor", "rubberband")
+    if not os.path.isdir(vendor_dir):
+        return
+    current_path = os.environ.get("PATH", "")
+    if vendor_dir in current_path.split(os.pathsep):
+        return
+    os.environ["PATH"] = vendor_dir + os.pathsep + current_path
+    log.info("Vendored rubberband binary found at %s; added to PATH.", vendor_dir)
+
+
+_ensure_vendored_rubberband_on_path()
 
 
 def _apply_pitch_formant(
@@ -67,6 +96,7 @@ def _apply_pitch_formant(
             log.warning(
                 "_apply_pitch_formant: formant_shift=%.1f ignored in fallback mode",
                 formant_shift,
+                extra={"ui_status": "Formant shift unavailable — install rubberband"},
             )
     except Exception as exc:
         log.warning("_apply_pitch_formant: unexpected error: %s", exc)

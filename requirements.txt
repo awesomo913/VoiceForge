@@ -1,8 +1,20 @@
+# torch/torchaudio are CPU-only builds from PyTorch's own wheel index (much
+# smaller than the default CUDA-enabled PyPI wheels, and all this app needs —
+# DeepFilterNet inference runs fine on CPU). See THIRD_PARTY.md.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 sounddevice==0.5.1
 soundfile==0.13.1
 numpy==1.26.4
 pedalboard==0.9.16
 pyrubberband==0.4.0
+# torch/torchaudio pinned to 2.1.2: deepfilternet==0.5.6's df.io module imports
+# torchaudio.backend.common.AudioMetaData, which newer torchaudio releases
+# (observed: 2.11+) removed — 2.1.2 is the newest pair confirmed to still work
+# with this deepfilternet version (verified by actually running AI noise
+# suppression against real audio, not just importing it — see CHANGELOG).
+torch==2.1.2
+torchaudio==2.1.2
 deepfilternet==0.5.6
 # rvc-python: SKIPPED — all versions require fairseq==0.12.2 which has no Windows wheel and fails source build.
 # The RVC layer (effects/rvc_layer.py) already handles this: it catches ImportError and
