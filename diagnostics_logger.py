@@ -1,6 +1,5 @@
-import sys
-import os
 import logging
+import sys
 import traceback
 from datetime import datetime
 from pathlib import Path

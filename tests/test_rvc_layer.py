@@ -1,10 +1,12 @@
-import numpy as np
-import sys
 import os
+import sys
 import tempfile
 from unittest.mock import patch
-from params import VoiceParams
+
+import numpy as np
+
 from effects.rvc_layer import apply_rvc
+from params import VoiceParams
 
 SR = 48000
 

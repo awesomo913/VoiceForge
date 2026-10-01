@@ -1,7 +1,9 @@
+from unittest.mock import patch
+
 import numpy as np
-from unittest.mock import patch, MagicMock
-from params import VoiceParams
+
 from engines.preview_engine import PreviewEngine
+from params import VoiceParams
 
 SR = 48000
 

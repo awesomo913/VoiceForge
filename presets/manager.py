@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import re
-from typing import Dict, List
 
 from params import VoiceParams
 
@@ -50,15 +49,15 @@ class PresetManager:
         if not os.path.exists(path):
             raise FileNotFoundError(f"Preset not found: {name!r} in {category!r}")
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 data = json.load(f)
         except (OSError, json.JSONDecodeError) as exc:
             log.warning("Failed to load preset %r: %s", name, exc)
             raise
         return VoiceParams.from_dict(data.get("params", data))
 
-    def list_presets(self) -> Dict[str, List[str]]:
-        result: Dict[str, List[str]] = {cat: [] for cat in CATEGORIES}
+    def list_presets(self) -> dict[str, list[str]]:
+        result: dict[str, list[str]] = {cat: [] for cat in CATEGORIES}
 
         # Builtin presets
         if os.path.exists(self.builtin_dir):

@@ -1,7 +1,9 @@
-import customtkinter as ctk
-from params import VoiceParams
-from typing import Callable
 import tkinter as tk
+from collections.abc import Callable
+
+import customtkinter as ctk
+
+from params import VoiceParams
 
 
 def _slider(parent, label: str, from_: float, to: float, initial: float,

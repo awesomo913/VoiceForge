@@ -7,8 +7,8 @@ from pedalboard import (
     Delay,
     LowShelfFilter,
     NoiseGate,
-    Pedalboard,
     PeakFilter,
+    Pedalboard,
     PitchShift,
     Reverb,
 )

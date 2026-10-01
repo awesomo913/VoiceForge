@@ -1,6 +1,5 @@
-from dataclasses import dataclass, field, asdict
-from typing import Any
 import json
+from dataclasses import asdict, dataclass, field
 
 
 @dataclass
@@ -66,7 +65,9 @@ class VoiceParams:
         rvc_fields = {f for f in RVCParams.__dataclass_fields__}
         return cls(
             dsp=DSPParams(**{k: v for k, v in dsp_data.items() if k in dsp_fields}),
-            enhance=AIEnhanceParams(**{k: v for k, v in enhance_data.items() if k in enhance_fields}),
+            enhance=AIEnhanceParams(
+                **{k: v for k, v in enhance_data.items() if k in enhance_fields}
+            ),
             rvc=RVCParams(**{k: v for k, v in rvc_data.items() if k in rvc_fields}),
         )
 

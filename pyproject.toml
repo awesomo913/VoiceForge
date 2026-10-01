@@ -1,0 +1,16 @@
+[project]
+name = "voiceforge"
+version = "1.0.0"
+description = "Free, open-source, offline voice-effects studio — DSP presets, AI noise cleanup, and optional user-supplied voice conversion."
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["build", "dist", ".venv", ".claude"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

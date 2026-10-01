@@ -1,5 +1,5 @@
-import numpy as np
 import customtkinter as ctk
+import numpy as np
 
 
 class WaveformWidget(ctk.CTkCanvas):

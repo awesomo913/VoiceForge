@@ -1,7 +1,9 @@
+from unittest.mock import MagicMock, patch
+
 import numpy as np
-from unittest.mock import patch, MagicMock
-from params import VoiceParams
+
 from effects.ai_enhance_layer import apply_enhancement
+from params import VoiceParams
 
 SR = 48000
 

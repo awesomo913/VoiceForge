@@ -1,10 +1,9 @@
-import threading
+
 import numpy as np
 import sounddevice as sd
-from typing import Optional, List
 
 
-def get_input_devices() -> List[dict]:
+def get_input_devices() -> list[dict]:
     devices = sd.query_devices()
     return [
         {"index": i, "name": d["name"]}
@@ -17,13 +16,13 @@ class Recorder:
     CHANNELS = 1
     DTYPE = np.float32
 
-    def __init__(self, sample_rate: int = 48000, device: Optional[int] = None):
+    def __init__(self, sample_rate: int = 48000, device: int | None = None):
         self.sample_rate = sample_rate
         self.device = device
-        self._frames: List[np.ndarray] = []
-        self._stream: Optional[sd.InputStream] = None
+        self._frames: list[np.ndarray] = []
+        self._stream: sd.InputStream | None = None
         self.is_recording = False
-        self.audio: Optional[np.ndarray] = None
+        self.audio: np.ndarray | None = None
 
     def start(self) -> None:
         if self.is_recording:
@@ -46,7 +45,7 @@ class Recorder:
         )
         self._stream.start()
 
-    def stop(self) -> Optional[np.ndarray]:
+    def stop(self) -> np.ndarray | None:
         if not self.is_recording and not self._frames:
             return None
         self.is_recording = False

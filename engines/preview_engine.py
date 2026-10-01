@@ -1,13 +1,14 @@
 """Preview engine chaining all three processing layers: DSP → AI Enhancement → RVC."""
 
 import logging
+
 import numpy as np
 import sounddevice as sd
 
-from params import VoiceParams
-from effects.dsp_layer import apply_dsp
 from effects.ai_enhance_layer import apply_enhancement
+from effects.dsp_layer import apply_dsp
 from effects.rvc_layer import apply_rvc
+from params import VoiceParams
 
 log = logging.getLogger(__name__)
 

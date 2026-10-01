@@ -1,18 +1,19 @@
 import json
-import os
 import logging
+import os
 import pathlib
-import customtkinter as ctk
-from params import VoiceParams
-from recorder import Recorder, get_input_devices
-from engines.preview_engine import PreviewEngine
-from engines.export_engine import ExportEngine
-from presets.manager import PresetManager
 
-from ui.toolbar import Toolbar
-from ui.waveform import WaveformWidget
+import customtkinter as ctk
+
+from engines.export_engine import ExportEngine
+from engines.preview_engine import PreviewEngine
+from params import VoiceParams
+from presets.manager import PresetManager
+from recorder import Recorder
 from ui.effects_panel import EffectsPanel
 from ui.preset_panel import PresetPanel
+from ui.toolbar import Toolbar
+from ui.waveform import WaveformWidget
 
 SESSION_FILE = str(pathlib.Path.home() / ".voiceforge" / "last_session.json")
 
@@ -137,7 +138,7 @@ class VoiceForgeApp:
         pathlib.Path(SESSION_FILE).parent.mkdir(parents=True, exist_ok=True)
         if os.path.exists(SESSION_FILE):
             try:
-                with open(SESSION_FILE, "r") as f:
+                with open(SESSION_FILE) as f:
                     self.params = VoiceParams.from_dict(json.load(f))
             except Exception as e:
                 logging.warning(f"Could not restore session: {e}")

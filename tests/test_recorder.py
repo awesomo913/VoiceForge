@@ -1,5 +1,7 @@
+from unittest.mock import patch
+
 import numpy as np
-from unittest.mock import patch, MagicMock
+
 from recorder import Recorder, get_input_devices
 
 

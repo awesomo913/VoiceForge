@@ -3,7 +3,6 @@ import logging
 import os
 import subprocess
 import tempfile
-from typing import Optional, Tuple
 
 import numpy as np
 
@@ -21,7 +20,7 @@ except ImportError:
     enhance = None  # type: ignore[assignment]
 
 
-def _get_df_model() -> Tuple[object, object]:
+def _get_df_model() -> tuple[object, object]:
     """Load (and cache) the DeepFilterNet model + state. Raises RuntimeError on failure."""
     global _df_model, _df_state
     if _df_model is None:

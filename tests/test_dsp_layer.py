@@ -1,7 +1,7 @@
 import numpy as np
-import pytest
-from params import VoiceParams
+
 from effects.dsp_layer import apply_dsp
+from params import VoiceParams
 
 SR = 48000
 

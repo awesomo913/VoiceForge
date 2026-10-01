@@ -1,7 +1,9 @@
+from collections.abc import Callable
+
 import customtkinter as ctk
-from presets.manager import PresetManager, CATEGORIES
+
 from params import VoiceParams
-from typing import Callable
+from presets.manager import CATEGORIES, PresetManager
 
 
 class PresetPanel(ctk.CTkFrame):
@@ -104,9 +106,9 @@ class PresetPanel(ctk.CTkFrame):
         self.refresh()
 
     def _do_import(self):
-        from tkinter import filedialog
         import json
         import os
+        from tkinter import filedialog
         path = filedialog.askopenfilename(filetypes=[("Preset JSON", "*.json")])
         if not path:
             return
@@ -125,8 +127,8 @@ class PresetPanel(ctk.CTkFrame):
     def _do_export(self):
         if not self._selected_name:
             return
-        from tkinter import filedialog
         import json
+        from tkinter import filedialog
         path = filedialog.asksaveasfilename(
             defaultextension=".json",
             filetypes=[("Preset JSON", "*.json")],
