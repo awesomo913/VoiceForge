@@ -9,8 +9,7 @@
     "soundfile",
     "pedalboard",
     "pyrubberband",
-    "df",
-    "rvc_python"
+    "df"
   ],
   "data_dirs": ["presets/builtin"],
   "icon": "assets/icon.ico"

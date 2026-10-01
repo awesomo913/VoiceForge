@@ -5,7 +5,7 @@ pedalboard==0.9.16
 pyrubberband==0.4.0
 deepfilternet==0.5.6
 # rvc-python: SKIPPED — all versions require fairseq==0.12.2 which has no Windows wheel and fails source build.
-# Add graceful fallback in code: try: import rvc; except ImportError: rvc = None
+# The RVC layer (effects/rvc_layer.py) already handles this: it catches ImportError and
+# passes audio through unchanged when rvc_python is not installed.
 customtkinter==5.2.2
 ffmpeg-python==0.2.0
-pytest==8.3.5
