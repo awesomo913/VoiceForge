@@ -1,0 +1,76 @@
+<svg viewBox="0 0 1280 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VoiceForge — Clean up and restyle your voice recordings, free, offline, open source.">
+  <defs>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9b5de5"/>
+      <stop offset="100%" stop-color="#00d4aa"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#9b5de5" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#9b5de5" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="400" fill="#14141f"/>
+  <ellipse cx="980" cy="200" rx="360" ry="220" fill="url(#glow)"/>
+
+  <!-- faint waveform texture -->
+  <path d="M 0 70 C 220 30, 420 110, 640 70 C 860 30, 1060 110, 1280 70" stroke="url(#accent)" stroke-width="1.5" fill="none" opacity="0.15"/>
+  <path d="M 0 340 C 220 380, 420 300, 640 340 C 860 380, 1060 300, 1280 340" stroke="url(#accent)" stroke-width="1.5" fill="none" opacity="0.15"/>
+
+  <!-- app tile: microphone glyph -->
+  <g transform="translate(90,104)">
+    <rect width="104" height="104" rx="26" fill="url(#accent)"/>
+    <rect x="38" y="24" width="28" height="42" rx="14" fill="#ffffff"/>
+    <path d="M 26 54 a 26 26 0 0 0 52 0" stroke="#ffffff" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <line x1="52" y1="80" x2="52" y2="90" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <!-- title + tagline -->
+  <g font-family="Segoe UI, system-ui, sans-serif">
+    <text x="90" y="255" font-size="52" font-weight="700" fill="#f5f7fa">VoiceForge</text>
+    <text x="92" y="290" font-size="22" fill="#a9b4c4">Clean up and restyle your voice recordings — free, offline.</text>
+  </g>
+
+  <!-- chips -->
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="600" fill="#14141f" text-anchor="middle">
+    <rect x="90" y="314" width="124" height="32" rx="16" fill="url(#accent)"/>
+    <text x="152" y="335">100% local</text>
+    <rect x="224" y="314" width="112" height="32" rx="16" fill="url(#accent)"/>
+    <text x="280" y="335">Free · MIT</text>
+    <rect x="346" y="314" width="150" height="32" rx="16" fill="url(#accent)"/>
+    <text x="421" y="335">11 voice presets</text>
+  </g>
+
+  <!-- mock app window with waveform + sliders -->
+  <g font-family="Segoe UI, system-ui, sans-serif">
+    <rect x="700" y="70" width="500" height="240" rx="16" fill="#1e1e2e" stroke="#2c2c42" stroke-width="1.5"/>
+    <circle cx="726" cy="96" r="6" fill="#ef476f" opacity="0.8"/>
+    <circle cx="746" cy="96" r="6" fill="#ffd166" opacity="0.8"/>
+    <circle cx="766" cy="96" r="6" fill="#2ec4b6" opacity="0.8"/>
+    <text x="950" y="101" font-size="14" fill="#8a8aa3" text-anchor="middle">Deep Authority</text>
+    <line x1="700" y1="118" x2="1200" y2="118" stroke="#2c2c42" stroke-width="1.5"/>
+
+    <!-- waveform -->
+    <polyline points="728,165 740,150 752,175 764,140 776,180 788,155 800,170 812,145 824,178 836,160 848,172 860,150 872,165 884,142 896,176 908,158 920,168 932,148 944,174 956,160 968,166 980,152 992,170 1004,159 1016,164 1028,150 1040,172 1052,158 1064,167 1076,153 1088,169 1100,160 1112,165 1124,151 1136,171 1148,157 1160,166 1172,154 1184,162"
+      fill="none" stroke="#00d4aa" stroke-width="2"/>
+    <line x1="728" y1="165" x2="1184" y2="165" stroke="#333355" stroke-width="1" stroke-dasharray="2 4"/>
+
+    <!-- sliders -->
+    <g>
+      <text x="728" y="210" font-size="13" fill="#a9b4c4">Pitch</text>
+      <line x1="800" y1="206" x2="1000" y2="206" stroke="#333355" stroke-width="4" stroke-linecap="round"/>
+      <line x1="800" y1="206" x2="900" y2="206" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="900" cy="206" r="7" fill="#f5f7fa"/>
+
+      <text x="728" y="240" font-size="13" fill="#a9b4c4">Warmth</text>
+      <line x1="800" y1="236" x2="1000" y2="236" stroke="#333355" stroke-width="4" stroke-linecap="round"/>
+      <line x1="800" y1="236" x2="960" y2="236" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="960" cy="236" r="7" fill="#f5f7fa"/>
+
+      <text x="728" y="270" font-size="13" fill="#a9b4c4">Reverb</text>
+      <line x1="800" y1="266" x2="1000" y2="266" stroke="#333355" stroke-width="4" stroke-linecap="round"/>
+      <line x1="800" y1="266" x2="860" y2="266" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="860" cy="266" r="7" fill="#f5f7fa"/>
+    </g>
+  </g>
+</svg>
