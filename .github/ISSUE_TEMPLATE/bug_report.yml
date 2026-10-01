@@ -1,0 +1,63 @@
+name: Bug report
+description: Something isn't working right
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. The more detail you give, the faster it can get fixed.
+
+  - type: input
+    id: os-version
+    attributes:
+      label: Operating system
+      description: e.g. Windows 11 23H2, macOS 14, Ubuntu 22.04
+      placeholder: Windows 11 23H2
+    validations:
+      required: true
+
+  - type: input
+    id: vf-version
+    attributes:
+      label: VoiceForge version
+      description: The release you downloaded/built, or the commit if built from source
+      placeholder: v1.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature
+    attributes:
+      label: Which part were you using?
+      options:
+        - Recording
+        - DSP effects (pitch/formant/reverb/echo/etc.)
+        - Presets (built-in or saved)
+        - AI noise suppression (DeepFilterNet)
+        - AI voice conversion (RVC, user-supplied model)
+        - Export (WAV)
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What did you do, what did you expect, what happened instead?
+      placeholder: |
+        1. Loaded the "Deep Authority" preset
+        2. Clicked Preview
+        3. Expected: processed playback, Actual: crashed with a traceback
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log / error output
+      description: Paste the console output or traceback (redact anything personal first — never paste audio content).
+      render: text
+    validations:
+      required: false
