@@ -2,6 +2,8 @@ import json
 import logging
 import os
 import pathlib
+import threading
+from tkinter import TclError
 
 import customtkinter as ctk
 
@@ -16,6 +18,29 @@ from ui.toolbar import Toolbar
 from ui.waveform import WaveformWidget
 
 SESSION_FILE = str(pathlib.Path.home() / ".voiceforge" / "last_session.json")
+
+
+class _UIStatusHandler(logging.Handler):
+    """Surfaces select log records to the toolbar's status label.
+
+    Only records carrying a `ui_status` extra (set via
+    `log.warning(..., extra={"ui_status": "..."})`) are forwarded — most log
+    output never reaches the UI. Each distinct message is shown at most once
+    per run, so a condition that keeps recurring on every preview/export
+    (e.g. a missing optional dependency) doesn't spam the status bar.
+    """
+
+    def __init__(self, app: "VoiceForgeApp") -> None:
+        super().__init__(level=logging.WARNING)
+        self._app = app
+        self._shown: set[str] = set()
+
+    def emit(self, record: logging.LogRecord) -> None:
+        message = getattr(record, "ui_status", None)
+        if not message or message in self._shown:
+            return
+        self._shown.add(message)
+        self._app.post_status(message)
 
 
 class VoiceForgeApp:
@@ -35,8 +60,29 @@ class VoiceForgeApp:
         self._processed_audio = None
         self._sample_rate = 48000
 
+        self._status_handler = _UIStatusHandler(self)
+        logging.getLogger().addHandler(self._status_handler)
+
         self._load_session()
         self._build_ui()
+
+    def run_on_ui_thread(self, fn) -> None:
+        """Schedule fn() to run on the Tk main loop. Safe to call from any thread.
+
+        Background work (preview processing, in particular) must never touch
+        Tk widgets directly — Tkinter is not thread-safe. Everything that
+        updates a widget from a worker thread goes through here instead.
+        """
+        try:
+            self.root.after(0, fn)
+        except (RuntimeError, TclError) as exc:
+            # The window was already closed/destroyed by the time the worker
+            # thread finished — nothing to update, just note it in the log.
+            logging.warning(f"UI update skipped (window gone): {exc}")
+
+    def post_status(self, message: str) -> None:
+        """Show *message* in the toolbar status label. Safe from any thread."""
+        self.run_on_ui_thread(lambda: self.toolbar.show_message(message))
 
     def _build_ui(self):
         self.toolbar = Toolbar(
@@ -88,16 +134,20 @@ class VoiceForgeApp:
         if self._raw_audio is None:
             self.toolbar.show_message("Record something first")
             return
-        import threading
         logging.info("STATE ready→previewing")
         self.toolbar.show_message("Processing...")
 
         def _run():
-            processed = self.preview_engine.process_and_play(
-                self._raw_audio, self._sample_rate, self.params
-            )
+            try:
+                processed = self.preview_engine.process_and_play(
+                    self._raw_audio, self._sample_rate, self.params
+                )
+            except Exception as exc:
+                logging.error(f"Preview processing failed: {exc}")
+                self.post_status(f"Preview failed: {exc}")
+                return
             self._processed_audio = processed
-            self.toolbar.show_message("Playing")
+            self.post_status("Playing")
             logging.info("STATE previewing→ready")
 
         threading.Thread(target=_run, daemon=True).start()
@@ -149,4 +199,10 @@ class VoiceForgeApp:
                 json.dump(self.params.to_dict(), f, indent=2)
         except Exception as exc:
             logging.warning(f"Could not save session: {exc}")
+        # Without this, a closed window's handler stays on the root logger
+        # forever — each later log call would try to schedule a status update
+        # on a destroyed Tk root (harmless, caught by run_on_ui_thread, but
+        # wasted work that accumulates if more than one instance is ever
+        # created in-process, e.g. in tests).
+        logging.getLogger().removeHandler(self._status_handler)
         self.root.destroy()
