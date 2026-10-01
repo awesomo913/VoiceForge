@@ -2,6 +2,10 @@
 
 Thanks for considering a contribution. VoiceForge is a small, free, open-source offline voice-effects studio — issues and PRs of any size are welcome.
 
+## License
+
+VoiceForge is licensed [GPL-3.0-or-later](LICENSE). By submitting a contribution, you agree it's licensed under the same terms (GPL-3.0-or-later) so it can be distributed as part of the project. See [THIRD_PARTY.md](THIRD_PARTY.md) for the licenses of bundled/vendored third-party components.
+
 ## Dev setup
 
 Requires Python 3.11.
@@ -20,7 +24,7 @@ For running the full check suite and building the exe, also install the dev depe
 uv pip install -r requirements-dev.txt
 ```
 
-`pyrubberband` (used for pitch/formant shifting) shells out to the `rubberband` command-line binary. If it isn't on `PATH`, the DSP layer automatically falls back to `pedalboard`'s built-in pitch shifter (formant shifting is unavailable in that fallback — see `effects/dsp_layer.py::_apply_pitch_formant`).
+`pyrubberband` (used for pitch/formant shifting) shells out to the `rubberband` command-line binary. `build.py` fetches and checksum-verifies a pinned release into `vendor/rubberband/` automatically (see [vendor/README.md](vendor/README.md)) when building the exe, but running from source via `python main.py` doesn't go through `build.py` — if `rubberband` isn't on `PATH` and `vendor/rubberband/` isn't populated, the DSP layer automatically falls back to `pedalboard`'s built-in pitch shifter (formant shifting is unavailable in that fallback — see `effects/dsp_layer.py::_apply_pitch_formant`). Run `python -c "import build; build.fetch_vendor_rubberband()"` once if you want it available from source too.
 
 ## Running tests and lint
 

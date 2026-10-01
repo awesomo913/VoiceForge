@@ -5,24 +5,23 @@ or depends on, their licenses, and — for anything whose weights/binary are
 actually shipped inside a release — exactly where they came from and how to
 verify them.
 
-## ⚠ Open licensing question: pedalboard is GPL-3.0
+## Licensing: VoiceForge is GPL-3.0-or-later
 
 [`pedalboard`](https://github.com/spotify/pedalboard) (Spotify's audio effects
 library, used directly as a Python import in `effects/dsp_layer.py` for the
 noise gate, de-esser, clarity, warmth, reverb, and echo effects) is licensed
 **GPL-3.0**, per its own PyPI classifier (`License :: OSI Approved :: GNU
-General Public License v3 (GPLv3)`). This was true before this round of
-changes — it's flagged here because the LICENSE file in this repo says MIT,
-and importing a GPL-3.0 library directly into a program (as opposed to
-invoking it as a separate process, which is how `rubberband` below is
-handled) is generally understood to require the combined work to also be
+General Public License v3 (GPLv3)`). Importing a GPL-3.0 library directly
+into a program (as opposed to invoking it as a separate process, which is
+how `rubberband` below is handled) requires the combined work to also be
 distributed under GPL-3.0-compatible terms.
 
-**This needs an explicit decision from the project owner** — options include:
-relicensing VoiceForge as GPL-3.0 (or a GPL-3.0-compatible license),
-replacing `pedalboard` with a differently-licensed DSP library, or getting
-clarity on whether Spotify offers alternate licensing terms. This document
-does not resolve it; it surfaces it so it isn't shipped unnoticed.
+**Resolved 2026-10-01 (owner decision): VoiceForge is relicensed to
+GPL-3.0-or-later.** See `LICENSE` for the full text. This also simplifies
+the `rubberband` situation below — bundling a GPL-2.0-or-later executable
+alongside a GPL-3.0-or-later program is straightforwardly compatible either
+way (as a separate process via "mere aggregation", which was already true,
+or even if it were linked directly, which it isn't).
 
 ## Bundled: DeepFilterNet3 model weights
 
@@ -53,34 +52,59 @@ does not resolve it; it surfaces it so it isn't shipped unnoticed.
   work with this `deepfilternet` version.
 - **License**: BSD-3-Clause (both packages).
 
-## Not bundled (requires a manual step): `rubberband` CLI
+## Bundled: `rubberband` CLI (Rubber Band Library 4.0.0) + libsndfile
 
 - **What it's for**: `pyrubberband` (used for pitch/formant shifting in
   `effects/dsp_layer.py`) shells out to a `rubberband` command-line
   executable. Without it, formant shift falls back to pedalboard's
   pitch-only shifter (pitch still works; formant shift is silently skipped
-  and now surfaced once in the UI status bar — see README Limitations).
-- **Why it isn't bundled automatically**: Rubber Band's command-line tool is
-  **GPL-2.0**-licensed, and more importantly, fetching and embedding a
-  third-party compiled executable from a website as part of an automated
-  build is not something this project's tooling does — that's a manual,
-  human-verified step (download, check whatever signature/checksum the
-  publisher provides, confirm it's the real thing) by design, documented in
-  `vendor/README.md`.
-- **Official source**: <https://breakfastquay.com/rubberband/> (project
-  homepage; downloads page links the Windows command-line build).
-- **License compliance when it IS vendored**: Rubber Band is invoked as a
-  separate executable via `subprocess` (never linked into the Python
-  process), which is "mere aggregation" under GPL-2.0 — VoiceForge itself
-  doesn't need to be GPL-licensed as a result. What IS required, and is
-  included once vendored:
-  - `licenses/rubberband-COPYING` — the GPL-2.0 license text (add the exact
-    text shipped with whatever release is downloaded).
-  - This section of THIRD_PARTY.md as the written source offer: Rubber Band's
-    source code is available from the project's own site and from
-    <https://github.com/breakfastquay/rubberband> under the same version's tag.
-- **Checksum**: none recorded yet — nothing is currently vendored. See
-  `vendor/README.md` and `build.py`'s `VENDOR_RUBBERBAND_SHA256` constant.
+  and surfaced once in the UI status bar — see README Limitations). With it
+  vendored (the default as of 2026-10-01), formant shift works fully.
+- **Version**: Rubber Band 4.0.0, official prebuilt Windows command-line
+  release.
+- **Source / download**:
+  `https://breakfastquay.com/files/releases/rubberband-4.0.0-gpl-executable-windows.zip`
+  (official releases page: <https://breakfastquay.com/rubberband/>). Code
+  repository: <https://hg.sr.ht/~breakfastquay/rubberband> / GitHub mirror
+  <https://github.com/breakfastquay/rubberband> (same version tag).
+- **Verification performed before vendoring** (2026-10-01, with the owner's
+  explicit authorization to use this specific, already-downloaded file):
+  - Zip sha256: `f2d47fc64dbb42f6cc62edf7933ac4fa89d8f0ef8b9cf97b6afc263a7fe05644`
+  - `rubberband.exe` sha256: `d26d81e20f48ea33070e638f58bdeb6a61ce7f0946d8f2629f30441caa2905d1`
+  - `sndfile.dll` sha256: `4e3bd2de8e1485110eaebef8e1239471f73d608773831c323bf528e05645655e`
+  - `rubberband.exe` Authenticode signature: **Valid**, signed by
+    `CN=Christopher Cannam, O=Particular Programs Ltd, L=London, C=GB`
+    (issued by Certum Code Signing 2021 CA), timestamped through 2034 — this
+    is Rubber Band's own author/publisher, independently confirmed via
+    `Get-AuthenticodeSignature` against the actual binary, not just trusted
+    on the strength of the download URL.
+  - Both checksums and the download URL are pinned in `build.py`
+    (`VENDOR_RUBBERBAND_ZIP_URL`, `VENDOR_RUBBERBAND_ZIP_SHA256`,
+    `VENDOR_RUBBERBAND_SHA256`) and verified again on every build — a
+    mismatch aborts the build rather than bundling an unverified file.
+- **What's vendored**: only `rubberband.exe`, `sndfile.dll`, and
+  `COPYING.txt` from the release zip (not `rubberband-r3.exe`,
+  `CHANGELOG.txt`, or `README.txt`, which aren't needed at runtime). Lives at
+  `vendor/rubberband/` (gitignored — never committed; `build.py`'s
+  `fetch_vendor_rubberband()` reproduces it from the pinned URL + checksums
+  on a clean checkout, e.g. in CI).
+- **Licenses**:
+  - Rubber Band Library and the command-line tool: **GPL-2.0-or-later**
+    (see `licenses/rubberband-COPYING`, copied verbatim from this release).
+  - `sndfile.dll` (libsndfile, required by `rubberband.exe` for audio file
+    I/O): **LGPL** (GNU Lesser General Public License). Source:
+    <http://www.mega-nerd.com/libsndfile/> (per Rubber Band's own README) /
+    current project home <https://github.com/libsndfile/libsndfile>.
+    libsndfile is used here unmodified, as a separate DLL invoked by the
+    separately-vendored `rubberband.exe` — VoiceForge's own code never links
+    against it directly.
+- **License compliance**: Rubber Band is invoked as a separate executable
+  via `subprocess` (never linked into the VoiceForge Python process), and
+  VoiceForge is itself GPL-3.0-or-later (see above) — both the "mere
+  aggregation" reading and a direct compatibility reading are satisfied.
+  Required and present: `licenses/rubberband-COPYING` (full GPL-2.0-or-later
+  text) and this section as the written source offer for Rubber Band's own
+  source code.
 
 ## Other direct dependencies (see `requirements.txt` for exact pins)
 

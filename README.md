@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/awesomo913/VoiceForge/releases/latest"><img src="https://img.shields.io/github/v/release/awesomo913/VoiceForge?label=release" alt="Latest release"></a>
   <a href="https://github.com/awesomo913/VoiceForge/releases"><img src="https://img.shields.io/github/downloads/awesomo913/VoiceForge/total" alt="Downloads"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2ec4b6" alt="MIT License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-2ec4b6" alt="GPL-3.0-or-later License"></a>
   <img src="https://img.shields.io/badge/platform-Windows-4d96ff" alt="Windows">
   <a href="https://github.com/awesomo913/VoiceForge/actions/workflows/ci.yml"><img src="https://github.com/awesomo913/VoiceForge/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <img src="https://img.shields.io/badge/processing-100%25%20local-2ec4b6" alt="100% local">
@@ -24,8 +24,8 @@
 ## Why VoiceForge
 
 - **Actually local.** Every effect — DSP, AI noise cleanup, optional voice conversion — runs on your own CPU. Your voice never leaves your machine.
-- **Free and open source.** No paywall, no upsell, no telemetry, no account. (See [Third-party components](THIRD_PARTY.md) for the licenses of what's bundled — not everything underneath is MIT.)
-- **Real voice-shaping, not a toy.** Pitch/formant shift, vibrato, noise gate, de-esser, clarity, warmth, reverb, and echo, built on [pedalboard](https://github.com/spotify/pedalboard) and [pyrubberband](https://github.com/bmcfee/pyrubberband).
+- **Free and open source.** GPL-3.0-or-later. No paywall, no upsell, no telemetry, no account. (See [Third-party components](THIRD_PARTY.md) for the licenses of everything bundled.)
+- **Real voice-shaping, not a toy.** Pitch/formant shift, vibrato, noise gate, de-esser, clarity, warmth, reverb, and echo, built on [pedalboard](https://github.com/spotify/pedalboard) and [pyrubberband](https://github.com/bmcfee/pyrubberband) (with the [Rubber Band](https://breakfastquay.com/rubberband/) CLI bundled for working formant shift).
 - **AI noise cleanup, built in.** Noise suppression and voice restoration via [DeepFilterNet](https://github.com/Rikorose/DeepFilterNet), with its model weights bundled in the release exe — works out of the box, no first-run download. Degrades gracefully to a pass-through if it ever can't load, instead of crashing.
 - **11 built-in presets** across four categories (My Voices, Reel Personas, Assistants, Characters), plus save/load/import/export for your own.
 - **Your voice, your choice.** Optional voice conversion (RVC) only runs on a model file *you* provide — see [Voice conversion ethics](#voice-conversion-ethics) below.
@@ -52,7 +52,7 @@
 | Feature | Detail |
 |---------|--------|
 | **Fully offline** | Runs on your machine — nothing leaves your device, no network calls at all |
-| **DSP effects** | Pitch, formant shift, vibrato, noise gate, de-esser, clarity (compression + EQ), warmth, reverb, echo |
+| **DSP effects** | Pitch, formant shift (via the bundled Rubber Band CLI), vibrato, noise gate, de-esser, clarity (compression + EQ), warmth, reverb, echo |
 | **AI noise cleanup** | Noise suppression + voice restoration via DeepFilterNet, model weights bundled (no download needed); logs and passes audio through unchanged in the rare case it can't load |
 | **Optional voice conversion (RVC)** | Off by default; only runs against a `.pth`/`.index` model **you** supply — see [Voice conversion ethics](#voice-conversion-ethics) |
 | **11 built-in presets** | My Voices, Reel Personas, Assistants, Characters — plus save/load/delete/rename/import/export for your own |
@@ -99,7 +99,7 @@ Prices below are the **cheapest individual/consumer plan or license** that inclu
 
 ² Voicemod's `/pricing` page no longer displays any prices (it redirects to the homepage, which only shows "Download for Free"), and third-party trackers disagree with each other (figures seen range from ~$2.49/mo to ~$15/mo depending on billing term and source). Rather than guess, this is left unconfirmed — check inside the Voicemod app for current pricing.
 
-³ Unlike the paid tools above, VoiceForge's AI noise cleanup needs no subscription or login — but it does mean a larger download (the exe bundles a CPU build of PyTorch). See [Limitations](#limitations) for the exact size and why.
+³ Unlike the paid tools above, VoiceForge's AI noise cleanup and formant shift need no subscription or login — but bundling both fully (a CPU build of PyTorch, plus the Rubber Band CLI) does mean a larger download than a pure-DSP tool would need. See [Limitations](#limitations) for the exact size and why.
 
 A few structural differences worth being upfront about:
 
@@ -117,14 +117,14 @@ Being upfront about what this is and isn't:
 
 - **Not real-time.** VoiceForge processes a recorded or loaded clip, not a live microphone stream — if you want a live voice changer for calls/games, that's a different category of tool (e.g. Voicemod).
 - **Voice conversion (RVC) doesn't run on Windows today.** `rvc_python`'s dependency (`fairseq`) has no installable Windows wheel, so on Windows the RVC layer always passes audio through unchanged, even if you load a model and enable it. This is a known upstream packaging gap, not a bug in VoiceForge's own code — the code path is written and tested, it just has nothing to run against on this platform.
-- **Formant shift needs the external `rubberband` command-line tool, which isn't bundled.** It's GPL-2.0-licensed, and this project doesn't automatically download and embed third-party executables as part of a build (see [THIRD_PARTY.md](THIRD_PARTY.md)) — vendoring it is a manual, human-verified step. Without it, formant shift falls back to pedalboard's pitch-only shifter (pitch shifting itself still works fine); the app surfaces this once in the status bar ("Formant shift unavailable — install rubberband") rather than failing silently.
-- **The release `.exe` is large (~165 MB) because AI noise cleanup is fully bundled.** That includes a CPU-only build of PyTorch (DeepFilterNet's inference backend) and the ~8 MB model itself, so noise cleanup works offline with no first-run download — the tradeoff is a bigger download than a pure-DSP tool would need.
+- **The release `.exe` is large (~165 MB) because AI noise cleanup and formant shift are both fully bundled.** That includes a CPU-only build of PyTorch (DeepFilterNet's inference backend), its ~8 MB model, and the Rubber Band CLI + libsndfile, so both work offline with no first-run download or separate install — the tradeoff is a bigger download than a pure-DSP tool would need.
+- **If formant shift ever falls back to pitch-only** (e.g. you built from source without vendoring Rubber Band yourself — see [vendor/README.md](vendor/README.md)), VoiceForge surfaces this once in the status bar ("Formant shift unavailable — install rubberband") rather than failing silently; pitch shifting itself is unaffected either way.
 - **No CLI or batch mode.** VoiceForge is GUI-only; there's no scripted way to process a folder of files.
 - **No built-in voice models.** You must supply your own RVC model if you want voice conversion — see [Voice conversion ethics](#voice-conversion-ethics).
 - **GUI needs a desktop environment.** The GUI (CustomTkinter/Tkinter) doesn't run headless.
 - **Windows only.** `sounddevice`/`pyrubberband`/the packaged `.exe` are tested on Windows; other platforms are untested.
-- **The release `.exe` is unsigned.** See the FAQ below.
-- **Licensing is mixed, not purely MIT.** This project's own code is MIT, but it uses `pedalboard` (GPL-3.0) directly as a library — see [THIRD_PARTY.md](THIRD_PARTY.md) for the open question this raises and what it means for redistribution.
+- **The release `.exe` is unsigned** (VoiceForge's own build — the bundled Rubber Band CLI inside it *is* separately Authenticode-signed by its own author). See the FAQ below.
+- **GPL-3.0-or-later.** This is a copyleft license: if you distribute VoiceForge (including a modified version), you must make the corresponding source available under the same license. See [LICENSE](LICENSE) and [THIRD_PARTY.md](THIRD_PARTY.md) for exactly what that covers.
 
 ## FAQ
 
@@ -161,7 +161,13 @@ On Windows, `rvc_python`'s own dependency (`fairseq`) has no installable wheel, 
 <details>
 <summary>I moved the pitch or formant slider but only the pitch changed — why?</summary>
 
-Formant shift needs the external `rubberband` command-line tool, which isn't bundled in the default build (see [Limitations](#limitations) and [THIRD_PARTY.md](THIRD_PARTY.md) for why). Without it, VoiceForge automatically falls back to pitch-only shifting and shows "Formant shift unavailable — install rubberband" in the status bar once per session. Pitch shifting itself is unaffected either way.
+Formant shift needs the external `rubberband` command-line tool. The official release build bundles it, so this normally shouldn't happen — but if you built from source without vendoring it yourself (see [vendor/README.md](vendor/README.md)), VoiceForge automatically falls back to pitch-only shifting and shows "Formant shift unavailable — install rubberband" in the status bar once per session. Pitch shifting itself is unaffected either way.
+</details>
+
+<details>
+<summary>Why is VoiceForge GPL instead of MIT?</summary>
+
+VoiceForge uses [pedalboard](https://github.com/spotify/pedalboard) (Spotify's audio effects library) directly as a library for several DSP effects, and pedalboard is GPL-3.0-licensed. Combining a GPL-3.0 library into a program generally requires the whole combined work to be distributed under GPL-3.0-compatible terms, so VoiceForge is licensed GPL-3.0-or-later. In practice this means: you're free to use, modify, and redistribute VoiceForge, but if you distribute a modified version, you need to make your changes' source available under the same license. See [LICENSE](LICENSE) for the full text and [THIRD_PARTY.md](THIRD_PARTY.md) for the licenses of everything bundled.
 </details>
 
 <details>
@@ -190,7 +196,7 @@ python build.py
 # → dist/VoiceForge.exe
 ```
 
-This bundles AI noise cleanup (torch + the DeepFilterNet model) automatically — no extra steps needed. Formant shift is the one feature that needs a manual step to work in the built exe: see [vendor/README.md](vendor/README.md) if you want to vendor the `rubberband` CLI yourself. Skipping it is fine; the build just falls back to pitch-only shifting.
+This bundles AI noise cleanup (torch + the DeepFilterNet model) and formant shift (the Rubber Band CLI) automatically — `build.py` fetches and checksum-verifies a pinned Rubber Band release if it isn't already present locally (see [vendor/README.md](vendor/README.md) for exactly what's verified and why). If that fetch is ever unavailable, the build still succeeds; formant shift just falls back to pitch-only shifting.
 
 Run tests and lint:
 
@@ -207,7 +213,7 @@ If VoiceForge is useful to you, a ⭐ helps others find it.
 
 ## License
 
-[MIT](LICENSE) © 2026 awesomo913
+[GPL-3.0-or-later](LICENSE) © 2026 awesomo913. See [THIRD_PARTY.md](THIRD_PARTY.md) for the licenses of bundled/vendored third-party components.
 
 ## Publisher
 

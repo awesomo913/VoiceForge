@@ -3,6 +3,9 @@ name = "voiceforge"
 version = "1.0.0"
 description = "Free, open-source, offline voice-effects studio — DSP presets, AI noise cleanup, and optional user-supplied voice conversion."
 requires-python = ">=3.11"
+license = { text = "GPL-3.0-or-later" }
+# GPL-3.0-or-later because pedalboard (used directly as a library) is
+# GPL-3.0 — see THIRD_PARTY.md for the full third-party license inventory.
 
 [tool.ruff]
 line-length = 100

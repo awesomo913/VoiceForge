@@ -1,40 +1,53 @@
 # vendor/
 
-This folder is gitignored (except this file) — nothing in it is committed. It
-exists so a human can manually vendor the optional `rubberband` command-line
-tool for a release build that includes working formant shift.
+This folder is gitignored (except this file) — nothing in it is committed.
+It holds the optional `rubberband` command-line tool (needed for formant
+shift) as a verified, checksum-pinned binary rather than a tracked file.
 
-**VoiceForge itself never downloads anything into this folder.** Automating a
-fetch-and-bundle of a third-party executable as part of a build or CI
-pipeline isn't something this project's tooling does — see THIRD_PARTY.md for
-the full reasoning. This is a deliberate, manual, one-time step for whoever
-is cutting a release, not something `build.py` or CI performs on its own.
+## How it gets here
 
-## To enable formant shift in a release build
+As of 2026-10-01, a specific Rubber Band 4.0.0 Windows release has been
+verified (zip sha256, `rubberband.exe` sha256, and its Authenticode
+signature by Christopher Cannam / Particular Programs Ltd, Rubber Band's own
+author — full record in `THIRD_PARTY.md`) and its exact download URL and
+checksums are pinned in `build.py` (`VENDOR_RUBBERBAND_ZIP_URL`,
+`VENDOR_RUBBERBAND_ZIP_SHA256`, `VENDOR_RUBBERBAND_SHA256`).
 
-1. Download the official Windows command-line build from
-   <https://breakfastquay.com/rubberband/> (the project's own site — check
-   for a published checksum or signature on that page and verify against it
-   if one exists).
-2. Unzip it and copy `rubberband.exe` (and any `.dll` files it ships with)
-   into this folder: `vendor/rubberband/rubberband.exe`, etc.
-3. Run `sha256sum vendor/rubberband/rubberband.exe` (or
-   `Get-FileHash -Algorithm SHA256` in PowerShell) and compare it against
-   whatever the official site publishes, if anything.
-4. Open `build.py` and set `VENDOR_RUBBERBAND_SHA256` to that hash, so future
-   builds fail loudly instead of silently bundling a different binary.
-5. Run `python build.py` as normal — it detects `vendor/rubberband/`,
-   verifies the checksum, and bundles it. If the folder is empty/missing, the
-   build proceeds exactly as before (formant shift uses pedalboard's
-   pitch-only fallback) — nothing breaks either way.
+- **Already have it locally?** `python build.py` just uses it — nothing is
+  re-downloaded.
+- **Clean checkout (CI, or a fresh dev machine)?** `build.py`'s
+  `fetch_vendor_rubberband()` downloads the pinned zip, verifies its sha256,
+  extracts `rubberband.exe` + `sndfile.dll` + `COPYING.txt` into
+  `vendor/rubberband/`, and verifies `rubberband.exe`'s own sha256 again —
+  aborting the build on any mismatch rather than ever bundling an unverified
+  file. `release.yml` calls this explicitly as its own CI step; `build.py`'s
+  `main()` also calls it, so a plain `python build.py` works unattended too.
+- **Folder missing/empty and fetching fails or is skipped?** The build
+  proceeds exactly as before — formant shift falls back to pedalboard's
+  pitch-only shifter (see README Limitations). Nothing breaks either way.
 
-## Why a human has to do this
+## Updating to a newer Rubber Band release
 
-Rubber Band is GPL-2.0-licensed. Shipping it as a separate executable that
-VoiceForge invokes over the command line (not linked into the app) qualifies
-as "mere aggregation" under the GPL, so it doesn't require VoiceForge itself
-to be GPL-licensed — but it does require the license text and a source offer
-to be included (see `licenses/rubberband-COPYING` and `THIRD_PARTY.md`), and
-it means a real binary from a real download has to be verified by someone
-before it ships. That verification step belongs to a person, not an
-automated script.
+Bumping the pinned version is a deliberate, reviewed change, not something
+that happens automatically:
+
+1. Download the new release from <https://breakfastquay.com/rubberband/>.
+2. Verify it independently — compute its sha256, and check its Authenticode
+   signature (`Get-AuthenticodeSignature` on Windows) really does show
+   Christopher Cannam / Particular Programs Ltd as the signer.
+3. Update `VENDOR_RUBBERBAND_ZIP_URL`, `VENDOR_RUBBERBAND_ZIP_SHA256`, and
+   `VENDOR_RUBBERBAND_SHA256` in `build.py` to the new values.
+4. Update the version number and checksums recorded in `THIRD_PARTY.md`.
+5. Delete the old `vendor/rubberband/` (if present) and run `python build.py`
+   to confirm the new one fetches, verifies, and bundles cleanly.
+
+## Why verification matters here
+
+Rubber Band is GPL-2.0-or-later, and VoiceForge itself is GPL-3.0-or-later
+(see `LICENSE`) — bundling it as a separate executable invoked over the
+command line (not linked into the app) is compatible either way. The
+checksum + signature pinning isn't about licensing, though: it's the
+supply-chain control that makes it acceptable to let a build pipeline
+re-fetch a third-party executable automatically at all — the pin means a
+tampered or substituted file fails the build loudly instead of silently
+shipping.

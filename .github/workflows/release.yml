@@ -29,12 +29,22 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
+      - name: Fetch and verify vendored rubberband (pinned release, checksum-verified)
+        # vendor/rubberband/ is gitignored, so a clean checkout (like this CI
+        # runner) starts without it. This re-downloads the exact same Rubber
+        # Band 4.0.0 Windows release that was manually verified (sha256 +
+        # Authenticode signature by Christopher Cannam / Particular Programs
+        # Ltd, the upstream author — see THIRD_PARTY.md) and aborts the build
+        # on any checksum mismatch. The pinned URL and both checksums (zip and
+        # rubberband.exe) live in build.py as VENDOR_RUBBERBAND_ZIP_URL /
+        # VENDOR_RUBBERBAND_ZIP_SHA256 / VENDOR_RUBBERBAND_SHA256 — this step
+        # just calls that same pinned logic explicitly so a failure here is
+        # easy to spot in the CI log rather than buried inside the main build
+        # step. build.py's own build also calls it, so running it twice here
+        # would just no-op the second time; this step exists for visibility.
+        run: python -c "import build; build.fetch_vendor_rubberband()"
+
       - name: Build VoiceForge.exe
-        # Note: this does NOT vendor the optional rubberband CLI (see
-        # THIRD_PARTY.md / vendor/README.md) — that's a manual, human-verified
-        # step this pipeline deliberately doesn't automate. build.py detects
-        # its absence and proceeds normally; formant shift uses pedalboard's
-        # pitch-only fallback in exes built by this workflow.
         run: python build.py
 
       - name: Compute SHA256

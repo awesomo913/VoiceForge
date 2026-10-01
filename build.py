@@ -21,32 +21,106 @@ Notes:
   excluded from the build and the layer already degrades to a pass-through
   at runtime when rvc_python is missing.
 - Formant shift (part of DSP pitch/formant shifting) needs the external
-  `rubberband` command-line tool, which is GPL-2.0-licensed and is NOT
-  downloaded by this script (this project doesn't fetch and execute
-  third-party binaries as part of an automated build). If a human has
-  manually placed a verified copy at vendor/rubberband/ (see
-  THIRD_PARTY.md for the exact steps and the official download page), this
-  script bundles it and formant shift works in the built exe. Otherwise the
-  build proceeds exactly as before and formant shift keeps using
-  pedalboard's pitch-only fallback — see README Limitations.
+  `rubberband` command-line tool, which is GPL-2.0-or-later licensed.
+  vendor/rubberband/ is gitignored (the binary is never committed), but a
+  specific release has been verified (sha256 + Authenticode signature by
+  Christopher Cannam / Particular Programs Ltd, the upstream author — see
+  THIRD_PARTY.md) and its exact download URL + checksum are pinned below, so
+  `fetch_vendor_rubberband()` can reproduce the same vendoring step on a
+  clean checkout (CI, or a fresh dev machine) without a human repeating the
+  manual verification each time. If vendor/rubberband/rubberband.exe is
+  already present locally, nothing is (re-)downloaded. If neither is true
+  and fetching isn't requested, the build proceeds exactly as before and
+  formant shift keeps using pedalboard's pitch-only fallback — see README
+  Limitations.
 """
 from __future__ import annotations
 
 import hashlib
+import io
 import os
 import subprocess
 import sys
+import urllib.request
+import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_NAME = "VoiceForge"
 MAIN = os.path.join(HERE, "main.py")
 VENDOR_RUBBERBAND_DIR = os.path.join(HERE, "vendor", "rubberband")
 
-# Filled in once a human has verified a specific downloaded rubberband.exe
-# against the official release (see THIRD_PARTY.md) and recorded its sha256
-# here. Left as None until that manual step has actually happened — an
-# unpinned binary is bundled with a loud warning rather than silently trusted.
-VENDOR_RUBBERBAND_SHA256: str | None = None
+# Pinned, verified Rubber Band 4.0.0 Windows CLI release (see THIRD_PARTY.md
+# for the full verification record: zip sha256, rubberband.exe sha256, and
+# the Authenticode signature chain confirming it's signed by Christopher
+# Cannam / Particular Programs Ltd, Rubber Band's own author/publisher).
+VENDOR_RUBBERBAND_ZIP_URL = (
+    "https://breakfastquay.com/files/releases/"
+    "rubberband-4.0.0-gpl-executable-windows.zip"
+)
+VENDOR_RUBBERBAND_ZIP_SHA256 = (
+    "f2d47fc64dbb42f6cc62edf7933ac4fa89d8f0ef8b9cf97b6afc263a7fe05644"
+)
+# The exact file this build bundles and verifies before every PyInstaller run.
+VENDOR_RUBBERBAND_SHA256 = "d26d81e20f48ea33070e638f58bdeb6a61ce7f0946d8f2629f30441caa2905d1"
+# Only these files from the release zip are vendored (sndfile.dll is
+# libsndfile, LGPL-licensed, required by rubberband.exe at runtime for audio
+# file I/O; COPYING.txt is Rubber Band's own GPL-2.0-or-later license text).
+_VENDOR_RUBBERBAND_ZIP_MEMBERS = {
+    "rubberband-4.0.0-gpl-executable-windows/rubberband.exe": "rubberband.exe",
+    "rubberband-4.0.0-gpl-executable-windows/sndfile.dll": "sndfile.dll",
+    "rubberband-4.0.0-gpl-executable-windows/COPYING.txt": "COPYING.txt",
+}
+
+
+def fetch_vendor_rubberband(force: bool = False) -> None:
+    """Download and verify the pinned Rubber Band release into vendor/rubberband/.
+
+    No-ops if vendor/rubberband/rubberband.exe already exists and *force* is
+    False — this is meant to make CI/fresh-checkout builds reproducible, not
+    to silently re-fetch over a build environment someone already set up by
+    hand. Verifies the zip's sha256 against VENDOR_RUBBERBAND_ZIP_SHA256
+    before extracting anything; aborts loudly on a mismatch rather than ever
+    trusting an unverified download.
+    """
+    exe_path = os.path.join(VENDOR_RUBBERBAND_DIR, "rubberband.exe")
+    if os.path.isfile(exe_path) and not force:
+        print(f"[build] {exe_path} already present — not re-downloading.")
+        return
+
+    print(f"[build] Downloading {VENDOR_RUBBERBAND_ZIP_URL} ...")
+    with urllib.request.urlopen(VENDOR_RUBBERBAND_ZIP_URL, timeout=120) as resp:
+        zip_bytes = resp.read()
+
+    actual_zip_hash = hashlib.sha256(zip_bytes).hexdigest()
+    if actual_zip_hash != VENDOR_RUBBERBAND_ZIP_SHA256:
+        raise SystemExit(
+            f"[build] FAILED: downloaded zip sha256 {actual_zip_hash} does not match "
+            f"the pinned VENDOR_RUBBERBAND_ZIP_SHA256 ({VENDOR_RUBBERBAND_ZIP_SHA256}) "
+            f"— refusing to extract an unverified download. If the upstream release "
+            f"genuinely changed, this pin needs a deliberate, reviewed update, not an "
+            f"automatic bypass."
+        )
+    print(f"[build] Zip sha256 verified: {actual_zip_hash}")
+
+    os.makedirs(VENDOR_RUBBERBAND_DIR, exist_ok=True)
+    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+        for member, dest_name in _VENDOR_RUBBERBAND_ZIP_MEMBERS.items():
+            with zf.open(member) as src:
+                data = src.read()
+            with open(os.path.join(VENDOR_RUBBERBAND_DIR, dest_name), "wb") as dst:
+                dst.write(data)
+            print(f"[build] Extracted {member} -> vendor/rubberband/{dest_name}")
+
+    actual_exe_hash = _sha256(exe_path)
+    if actual_exe_hash != VENDOR_RUBBERBAND_SHA256:
+        raise SystemExit(
+            f"[build] FAILED: extracted rubberband.exe sha256 {actual_exe_hash} does "
+            f"not match the pinned VENDOR_RUBBERBAND_SHA256 ({VENDOR_RUBBERBAND_SHA256}) "
+            f"— the verified zip's sha256 matched, but the executable inside it didn't "
+            f"match what was separately verified (Authenticode-signed by Christopher "
+            f"Cannam, see THIRD_PARTY.md). Refusing to use it."
+        )
+    print(f"[build] vendor/rubberband/rubberband.exe sha256 verified: {actual_exe_hash}")
 
 # Hidden imports that PyInstaller's static import-analysis misses.
 _HIDDEN_IMPORTS = [
@@ -190,6 +264,7 @@ def build_exe() -> None:
 
 
 def main() -> None:
+    fetch_vendor_rubberband()
     build_exe()
 
     exe_path = os.path.join(HERE, "dist", f"{APP_NAME}.exe")
