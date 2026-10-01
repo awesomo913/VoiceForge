@@ -18,6 +18,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
 
       - name: Install dependencies
         run: |
@@ -26,6 +30,11 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Build VoiceForge.exe
+        # Note: this does NOT vendor the optional rubberband CLI (see
+        # THIRD_PARTY.md / vendor/README.md) — that's a manual, human-verified
+        # step this pipeline deliberately doesn't automate. build.py detects
+        # its absence and proceeds normally; formant shift uses pedalboard's
+        # pitch-only fallback in exes built by this workflow.
         run: python build.py
 
       - name: Compute SHA256

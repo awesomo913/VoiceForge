@@ -15,6 +15,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
+          # torch is a ~185 MB download from PyTorch's own CPU wheel index (see
+          # requirements.txt's --extra-index-url) — caching pip's wheel cache,
+          # keyed on these files, avoids re-fetching it on every run.
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
 
       - name: Install dependencies
         run: |

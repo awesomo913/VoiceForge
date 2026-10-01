@@ -88,9 +88,18 @@ def _sha256(path: str) -> str:
     return digest.hexdigest()
 
 
-def _find_vendored_rubberband_binaries() -> list[str]:
-    """Return every file under vendor/rubberband/ to bundle, verifying the
-    main executable's checksum when VENDOR_RUBBERBAND_SHA256 is pinned.
+def _find_vendored_rubberband_binaries() -> list[tuple[str, str]]:
+    """Return (absolute_path, dest_subdir) for every file under
+    vendor/rubberband/ to bundle — walked recursively, so a nested support
+    folder (e.g. a licenses/ or lib/ subdirectory some CLI tool distributions
+    ship with) isn't silently dropped — verifying the main executable's
+    checksum when VENDOR_RUBBERBAND_SHA256 is pinned.
+
+    Only rubberband.exe itself is checksum-verified; any other file found
+    alongside it (DLLs, data files, ...) is bundled unverified and this is
+    printed explicitly for each one rather than left implicit, since a
+    tampered/substituted companion file loaded by rubberband.exe at runtime
+    would otherwise defeat the point of verifying the exe at all.
 
     Returns an empty list (and prints why) when nothing is vendored — this is
     the expected/default state until a human completes the manual steps in
@@ -104,13 +113,15 @@ def _find_vendored_rubberband_binaries() -> list[str]:
         )
         return []
 
-    files = sorted(
-        os.path.join(VENDOR_RUBBERBAND_DIR, name)
-        for name in os.listdir(VENDOR_RUBBERBAND_DIR)
-        if os.path.isfile(os.path.join(VENDOR_RUBBERBAND_DIR, name))
-    )
+    entries: list[tuple[str, str]] = []  # (absolute_path, dest_subdir_under_vendor/rubberband)
+    for root, _dirs, filenames in os.walk(VENDOR_RUBBERBAND_DIR):
+        rel_dir = os.path.relpath(root, VENDOR_RUBBERBAND_DIR)
+        dest_subdir = "vendor/rubberband" if rel_dir == "." else f"vendor/rubberband/{rel_dir}"
+        for name in sorted(filenames):
+            entries.append((os.path.join(root, name), dest_subdir))
+
     exe_path = os.path.join(VENDOR_RUBBERBAND_DIR, "rubberband.exe")
-    if not files or not os.path.isfile(exe_path):
+    if not entries or not os.path.isfile(exe_path):
         print(
             f"[build] {VENDOR_RUBBERBAND_DIR} exists but has no rubberband.exe in it — "
             "ignoring it and building without the rubberband CLI."
@@ -137,7 +148,15 @@ def _find_vendored_rubberband_binaries() -> list[str]:
     else:
         print(f"[build] vendor/rubberband/rubberband.exe sha256 verified: {actual_hash}")
 
-    return files
+    other_files = [path for path, _dest in entries if path != exe_path]
+    if other_files:
+        print(
+            f"[build] Also bundling {len(other_files)} file(s) alongside rubberband.exe "
+            f"with NO individual checksum check (only the exe itself is verified above): "
+            + ", ".join(os.path.relpath(p, VENDOR_RUBBERBAND_DIR) for p in other_files)
+        )
+
+    return entries
 
 
 def build_exe() -> None:
@@ -159,8 +178,8 @@ def build_exe() -> None:
     sep = ";" if os.name == "nt" else ":"
     for src, dest in _ADD_DATA:
         args.append(f"--add-data={src}{sep}{dest}")
-    for binary_path in _find_vendored_rubberband_binaries():
-        args.append(f"--add-binary={binary_path}{sep}vendor/rubberband")
+    for binary_path, dest_subdir in _find_vendored_rubberband_binaries():
+        args.append(f"--add-binary={binary_path}{sep}{dest_subdir}")
     args.append(MAIN)
 
     print("[build] Running PyInstaller (this may take 1-2 minutes)...")

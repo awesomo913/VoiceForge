@@ -13,6 +13,12 @@ last_session.json
 .pytest_cache/
 .ruff_cache/
 
+# Manually-vendored third-party binary (GPL-2.0 rubberband CLI) — never
+# committed to git; see THIRD_PARTY.md and vendor/README.md for how a human
+# fetches and verifies it before a release build.
+vendor/*
+!vendor/README.md
+
 # Local AI dev tooling / internal notes — not part of the published project
 .claude/
 CLAUDE.md

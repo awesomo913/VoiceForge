@@ -24,9 +24,9 @@
 ## Why VoiceForge
 
 - **Actually local.** Every effect — DSP, AI noise cleanup, optional voice conversion — runs on your own CPU. Your voice never leaves your machine.
-- **Free and open source.** MIT licensed. No paywall, no upsell, no telemetry, no account.
+- **Free and open source.** No paywall, no upsell, no telemetry, no account. (See [Third-party components](THIRD_PARTY.md) for the licenses of what's bundled — not everything underneath is MIT.)
 - **Real voice-shaping, not a toy.** Pitch/formant shift, vibrato, noise gate, de-esser, clarity, warmth, reverb, and echo, built on [pedalboard](https://github.com/spotify/pedalboard) and [pyrubberband](https://github.com/bmcfee/pyrubberband).
-- **AI noise cleanup.** Optional noise suppression and voice restoration via [DeepFilterNet](https://github.com/Rikorose/DeepFilterNet) — degrades gracefully to a pass-through if its model can't load, instead of crashing.
+- **AI noise cleanup, built in.** Noise suppression and voice restoration via [DeepFilterNet](https://github.com/Rikorose/DeepFilterNet), with its model weights bundled in the release exe — works out of the box, no first-run download. Degrades gracefully to a pass-through if it ever can't load, instead of crashing.
 - **11 built-in presets** across four categories (My Voices, Reel Personas, Assistants, Characters), plus save/load/import/export for your own.
 - **Your voice, your choice.** Optional voice conversion (RVC) only runs on a model file *you* provide — see [Voice conversion ethics](#voice-conversion-ethics) below.
 
@@ -53,7 +53,7 @@
 |---------|--------|
 | **Fully offline** | Runs on your machine — nothing leaves your device, no network calls at all |
 | **DSP effects** | Pitch, formant shift, vibrato, noise gate, de-esser, clarity (compression + EQ), warmth, reverb, echo |
-| **AI noise cleanup** | Noise suppression + voice restoration via DeepFilterNet; logs and passes audio through unchanged if the model is unavailable |
+| **AI noise cleanup** | Noise suppression + voice restoration via DeepFilterNet, model weights bundled (no download needed); logs and passes audio through unchanged in the rare case it can't load |
 | **Optional voice conversion (RVC)** | Off by default; only runs against a `.pth`/`.index` model **you** supply — see [Voice conversion ethics](#voice-conversion-ethics) |
 | **11 built-in presets** | My Voices, Reel Personas, Assistants, Characters — plus save/load/delete/rename/import/export for your own |
 | **Session auto-save** | Your last settings are restored on next launch (`~/.voiceforge/last_session.json`) |
@@ -88,7 +88,7 @@ Prices below are the **cheapest individual/consumer plan or license** that inclu
 
 | Product | Plan | Price | Billing | Source |
 |---|---|---|---|---|
-| **VoiceForge** | — | $0 | — | (this project) |
+| **VoiceForge** | — | $0³ | — | (this project) |
 | iZotope RX Elements | RX 12 Elements | $99.00 | one-time, perpetual license | [izotope.com/en/shop/rx-elements.html](https://www.izotope.com/en/shop/rx-elements.html) |
 | iZotope RX Standard | RX 12 Standard | $399.00 | one-time, perpetual license | [izotope.com/en/shop/rx-standard](https://www.izotope.com/en/shop/rx-standard) |
 | Adobe Podcast | Premium | $9.99/mo¹ | $99.99/yr billed yearly | [podcast.adobe.com](https://podcast.adobe.com/en/enhance)¹ |
@@ -98,6 +98,8 @@ Prices below are the **cheapest individual/consumer plan or license** that inclu
 ¹ Adobe's official pricing page is a JavaScript application that didn't return readable pricing text to an automated fetch; the $9.99/mo ($99.99/yr) figure is cross-checked across third-party pricing trackers, not read directly from the rendered page the way the iZotope and Krisp prices were — verify on [podcast.adobe.com](https://podcast.adobe.com/en/enhance) before quoting this elsewhere.
 
 ² Voicemod's `/pricing` page no longer displays any prices (it redirects to the homepage, which only shows "Download for Free"), and third-party trackers disagree with each other (figures seen range from ~$2.49/mo to ~$15/mo depending on billing term and source). Rather than guess, this is left unconfirmed — check inside the Voicemod app for current pricing.
+
+³ Unlike the paid tools above, VoiceForge's AI noise cleanup needs no subscription or login — but it does mean a larger download (the exe bundles a CPU build of PyTorch). See [Limitations](#limitations) for the exact size and why.
 
 A few structural differences worth being upfront about:
 
@@ -115,13 +117,14 @@ Being upfront about what this is and isn't:
 
 - **Not real-time.** VoiceForge processes a recorded or loaded clip, not a live microphone stream — if you want a live voice changer for calls/games, that's a different category of tool (e.g. Voicemod).
 - **Voice conversion (RVC) doesn't run on Windows today.** `rvc_python`'s dependency (`fairseq`) has no installable Windows wheel, so on Windows the RVC layer always passes audio through unchanged, even if you load a model and enable it. This is a known upstream packaging gap, not a bug in VoiceForge's own code — the code path is written and tested, it just has nothing to run against on this platform.
-- **AI noise cleanup needs its model to load.** If DeepFilterNet's backend (`torch`) isn't installed or fails to load, the enhancement layer logs the failure and passes audio through unprocessed rather than crashing — so a run with that dependency missing silently skips just that one step.
-- **The release `.exe` bundles only what's actually installed when it's built.** `torch` (DeepFilterNet's neural-net backend, ~150–700 MB depending on platform) is deliberately **not** installed in this project's build environment or listed as a hard requirement, to keep the exe a reasonable download size. AI noise cleanup therefore no-ops today (see above) — the code path is real and tested, it just has nothing to run against. If you want working AI noise cleanup, `uv pip install torch` yourself and rebuild from source; a future release may ship a separate "AI-enabled" build if there's demand.
+- **Formant shift needs the external `rubberband` command-line tool, which isn't bundled.** It's GPL-2.0-licensed, and this project doesn't automatically download and embed third-party executables as part of a build (see [THIRD_PARTY.md](THIRD_PARTY.md)) — vendoring it is a manual, human-verified step. Without it, formant shift falls back to pedalboard's pitch-only shifter (pitch shifting itself still works fine); the app surfaces this once in the status bar ("Formant shift unavailable — install rubberband") rather than failing silently.
+- **The release `.exe` is large (~165 MB) because AI noise cleanup is fully bundled.** That includes a CPU-only build of PyTorch (DeepFilterNet's inference backend) and the ~8 MB model itself, so noise cleanup works offline with no first-run download — the tradeoff is a bigger download than a pure-DSP tool would need.
 - **No CLI or batch mode.** VoiceForge is GUI-only; there's no scripted way to process a folder of files.
 - **No built-in voice models.** You must supply your own RVC model if you want voice conversion — see [Voice conversion ethics](#voice-conversion-ethics).
 - **GUI needs a desktop environment.** The GUI (CustomTkinter/Tkinter) doesn't run headless.
 - **Windows only.** `sounddevice`/`pyrubberband`/the packaged `.exe` are tested on Windows; other platforms are untested.
 - **The release `.exe` is unsigned.** See the FAQ below.
+- **Licensing is mixed, not purely MIT.** This project's own code is MIT, but it uses `pedalboard` (GPL-3.0) directly as a library — see [THIRD_PARTY.md](THIRD_PARTY.md) for the open question this raises and what it means for redistribution.
 
 ## FAQ
 
@@ -156,9 +159,15 @@ On Windows, `rvc_python`'s own dependency (`fairseq`) has no installable wheel, 
 </details>
 
 <details>
+<summary>I moved the pitch or formant slider but only the pitch changed — why?</summary>
+
+Formant shift needs the external `rubberband` command-line tool, which isn't bundled in the default build (see [Limitations](#limitations) and [THIRD_PARTY.md](THIRD_PARTY.md) for why). Without it, VoiceForge automatically falls back to pitch-only shifting and shows "Formant shift unavailable — install rubberband" in the status bar once per session. Pitch shifting itself is unaffected either way.
+</details>
+
+<details>
 <summary>Something failed — where's the log?</summary>
 
-VoiceForge writes a plain-text log to `~/.claude/session-data/<date>/exe_VoiceForge.log` via `diagnostics_logger.py`. If you open an issue, attaching the last few lines helps a lot — they contain state transitions and timings, never your audio content.
+VoiceForge writes a plain-text log to `%LOCALAPPDATA%\VoiceForge\logs\app.log` on Windows (`~/.local/state/VoiceForge/logs/app.log` elsewhere) via `diagnostics_logger.py`. If you open an issue, attaching the last few lines helps a lot — they contain state transitions and timings, never your audio content.
 </details>
 
 ## Build from source
@@ -180,6 +189,8 @@ uv pip install -r requirements-dev.txt
 python build.py
 # → dist/VoiceForge.exe
 ```
+
+This bundles AI noise cleanup (torch + the DeepFilterNet model) automatically — no extra steps needed. Formant shift is the one feature that needs a manual step to work in the built exe: see [vendor/README.md](vendor/README.md) if you want to vendor the `rubberband` CLI yourself. Skipping it is fine; the build just falls back to pitch-only shifting.
 
 Run tests and lint:
 
