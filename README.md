@@ -17,10 +17,6 @@
   <a href="https://github.com/awesomo913/VoiceForge/releases/latest"><b>⬇ Download for Windows</b></a>
 </p>
 
-<p align="center">
-  <img src="docs/assets/demo.gif" alt="Record a clip, pick a preset like Deep Authority, click Preview, then Export WAV" width="85%">
-</p>
-
 ## Why VoiceForge
 
 - **Actually local.** Every effect — DSP, AI noise cleanup, optional voice conversion — runs on your own CPU. Your voice never leaves your machine.
