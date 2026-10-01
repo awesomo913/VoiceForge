@@ -20,4 +20,12 @@ deepfilternet==0.5.6
 # The RVC layer (effects/rvc_layer.py) already handles this: it catches ImportError and
 # passes audio through unchanged when rvc_python is not installed.
 customtkinter==5.2.2
-ffmpeg-python==0.2.0
+# imageio-ffmpeg bundles a real ffmpeg binary as package data (no separate
+# system install needed) — engines/export_engine.py resolves it via
+# imageio_ffmpeg.get_ffmpeg_exe() by default, falling back to PATH ffmpeg
+# only if this package is somehow unavailable. See THIRD_PARTY.md for the
+# bundled ffmpeg build's own license (it's a GPLv3 build, compatible with
+# VoiceForge's GPL-3.0-or-later). Replaces the previously-listed
+# ffmpeg-python, which was never actually imported anywhere in this codebase
+# (export_engine.py always built its own ffmpeg CLI args via subprocess).
+imageio-ffmpeg==0.6.0

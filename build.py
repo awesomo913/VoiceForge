@@ -33,6 +33,11 @@ Notes:
   and fetching isn't requested, the build proceeds exactly as before and
   formant shift keeps using pedalboard's pitch-only fallback — see README
   Limitations.
+- Export's FFmpeg DSP filter chain (engines/export_engine.py) uses the real
+  ffmpeg binary bundled by the `imageio-ffmpeg` wheel, collected here via
+  `--collect-data=imageio_ffmpeg` — no system ffmpeg install is required to
+  build or to run the resulting exe. See THIRD_PARTY.md for that binary's
+  own license (it's a GPLv3 build).
 """
 from __future__ import annotations
 
@@ -136,6 +141,11 @@ _COLLECT_DATA = [
     "customtkinter",
     # DeepFilterNet's bundled model weights (only present if installed).
     "df",
+    # The actual ffmpeg.exe imageio-ffmpeg ships as package data under
+    # imageio_ffmpeg/binaries/ — collecting it preserves the package-relative
+    # layout that imageio_ffmpeg.get_ffmpeg_exe() (via importlib.resources)
+    # needs to find it inside the frozen exe. See engines/export_engine.py.
+    "imageio_ffmpeg",
 ]
 
 _COLLECT_SUBMODULES = [

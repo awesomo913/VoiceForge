@@ -106,6 +106,42 @@ or even if it were linked directly, which it isn't).
   text) and this section as the written source offer for Rubber Band's own
   source code.
 
+## Bundled: FFmpeg (via the `imageio-ffmpeg` wheel)
+
+- **What it's for**: `engines/export_engine.py`'s DSP filter chain (noise
+  gate, de-esser, compressor+EQ, reverb/echo, loudnorm) shells out to
+  `ffmpeg -af ...`. Previously this called a bare `ffmpeg` on PATH, which
+  broke CI (`windows-latest` has no ffmpeg installed) and would equally
+  break export for any end user who doesn't have ffmpeg installed — WAV
+  export (the final file write) never used ffmpeg, only this DSP step did.
+- **Fix (2026-10-01)**: `imageio-ffmpeg` (pinned in `requirements.txt`)
+  bundles a complete, real ffmpeg binary as package data
+  (`imageio_ffmpeg/binaries/ffmpeg-win-x86_64-v7.1.exe`, ~87.6 MB).
+  `export_engine._resolve_ffmpeg_binary()` calls
+  `imageio_ffmpeg.get_ffmpeg_exe()`, which resolves (in order) an
+  `IMAGEIO_FFMPEG_EXE` env override, this bundled binary, a conda-installed
+  ffmpeg, or a system `ffmpeg` on PATH — falling back to the bare string
+  `"ffmpeg"` only if `imageio_ffmpeg` itself is unavailable. `build.py`
+  collects it into the release exe via `--collect-data=imageio_ffmpeg`
+  (preserves the package-relative layout `importlib.resources` needs).
+- **Version / provenance**: `imageio-ffmpeg==0.6.0`'s Windows x86_64 binary,
+  built by gyan.dev (`ffmpeg version 7.1-essentials_build-www.gyan.dev`).
+- **License**: the `imageio-ffmpeg` Python wrapper itself is BSD-2-Clause.
+  The bundled ffmpeg *binary* is a separate build with its own license —
+  confirmed via `ffmpeg -version`'s configuration string, which includes
+  `--enable-gpl --enable-version3` (plus `--enable-libx264`,
+  `--enable-libmp3lame`, and other GPL-only components) — i.e. it's a
+  **GPLv3** build, not LGPL. The GPLv3 text is identical to the one already
+  in this repo's own `LICENSE` (VoiceForge is itself GPL-3.0-or-later), so
+  no separate license file is duplicated here; the written source offer is
+  FFmpeg's own public source (<https://ffmpeg.org/download.html>) and
+  gyan.dev's build scripts (<https://github.com/GyanD/codexffmpeg>) for this
+  specific build.
+- **License compliance**: ffmpeg is invoked as a separate executable via
+  `subprocess` (never linked into the VoiceForge Python process), and
+  VoiceForge is itself GPL-3.0-or-later — compatible either as "mere
+  aggregation" or under direct compatibility.
+
 ## Other direct dependencies (see `requirements.txt` for exact pins)
 
 | Package | License |
@@ -115,5 +151,5 @@ or even if it were linked directly, which it isn't).
 | numpy | BSD-3-Clause |
 | pyrubberband (the Python wrapper, not the CLI binary) | ISC |
 | customtkinter | MIT |
-| ffmpeg-python | MIT |
+| imageio-ffmpeg (Python wrapper; see the bundled-FFmpeg section above for the binary's own license) | BSD-2-Clause |
 | deepfilternet | MIT |
