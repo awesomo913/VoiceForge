@@ -5,7 +5,15 @@ __pycache__/
 dist/
 build/
 *.spec
-models/
+models/*
+!models/.gitkeep
 presets/user/
 last_session.json
 *.log
+.pytest_cache/
+.ruff_cache/
+
+# Local AI dev tooling / internal notes — not part of the published project
+.claude/
+CLAUDE.md
+docs/superpowers/
