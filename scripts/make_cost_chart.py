@@ -39,11 +39,13 @@ DATA = [
     ("VoiceForge", 0, "free, forever"),
 ]
 
-BG = "#14141f"
-FG = "#e6edf3"
-MUTED = "#8899aa"
-FREE_COLOR = "#00d4aa"
-PAID_COLOR = "#5c3d99"
+# Recording-studio / forge palette (matches docs/assets/banner.svg).
+BG = "#27231f"  # warm charcoal
+FG = "#f1e3cd"  # cream
+MUTED = "#b3a692"
+FREE_COLOR = "#ff8a1f"  # ember orange
+PAID_COLOR = "#7a7068"  # muted steel
+GRID = "#3d3732"
 
 
 def main() -> None:
@@ -57,7 +59,7 @@ def main() -> None:
     ax.set_facecolor(BG)
 
     ypos = list(range(len(DATA)))[::-1]
-    # A sliver so the $0 row still shows a visible teal marker.
+    # A sliver so the $0 row still shows a visible ember marker.
     shown = [v if v > 0 else top * 0.012 for v in values]
     ax.barh(ypos, shown, color=colors, height=0.62, zorder=3)
 
@@ -82,8 +84,8 @@ def main() -> None:
                  loc="left", fontweight="bold")
     for side in ("top", "right", "left"):
         ax.spines[side].set_visible(False)
-    ax.spines["bottom"].set_color("#2a2a42")
-    ax.xaxis.grid(True, color="#2a2a42", linewidth=0.7, zorder=0)
+    ax.spines["bottom"].set_color(GRID)
+    ax.xaxis.grid(True, color=GRID, linewidth=0.7, zorder=0)
     ax.set_axisbelow(True)
 
     fig.tight_layout()
